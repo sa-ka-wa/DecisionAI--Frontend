@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import TaskCard from "../components/TaskCard";
-import { getTasks, addTask, updateTask, deleteTask } from "../services/api";
+import { api } from "../services/api";
 import "../Pages.Styles/Tasks.css";
 
 export default function Tasks() {
@@ -16,7 +16,33 @@ export default function Tasks() {
   });
 
   useEffect(() => {
-    setTasks(getTasks());
+    const fetchTasks = async () => {
+      try {
+        const response = await api.getTasks();
+        if (response.success) {
+          setTasks(response.data);
+        } else {
+          console.error("Failed to fetch tasks:", response.message);
+        }
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+        // For development, use dummy data if API fails
+        const dummyTasks = [
+          {
+            id: 1,
+            title: "Example Task",
+            category: "Work",
+            priority: 3,
+            impact: 5,
+            dueDate: "2024-02-15",
+            status: "pending",
+            progress: 0,
+          },
+        ];
+        setTasks(dummyTasks);
+      }
+    };
+    fetchTasks();
   }, []);
 
   const handleInputChange = (e) => {
@@ -28,18 +54,33 @@ export default function Tasks() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingTask) {
-      const updated = updateTask({ ...formData, id: editingTask.id });
-      setTasks(updated);
-    } else {
-      const newTask = { ...formData, id: Date.now() };
-      const updated = addTask(newTask);
-      setTasks(updated);
+    try {
+      if (editingTask) {
+        const response = await api.updateTask(editingTask.id, formData);
+        if (response.success) {
+          // Update local state
+          setTasks(
+            tasks.map((task) =>
+              task.id === editingTask.id ? response.data : task,
+            ),
+          );
+          resetForm();
+          setIsModalOpen(false);
+        }
+      } else {
+        const response = await api.createTask(formData);
+        if (response.success) {
+          // Add new task to local state
+          setTasks([...tasks, response.data]);
+          resetForm();
+          setIsModalOpen(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error saving task:", error);
     }
-    resetForm();
-    setIsModalOpen(false);
   };
 
   const handleEdit = (task) => {
@@ -49,15 +90,23 @@ export default function Tasks() {
       category: task.category,
       priority: task.priority,
       impact: task.impact,
-      dueDate: task.dueDate.split("T")[0],
+      dueDate: task.dueDate
+        ? task.dueDate.split("T")[0]
+        : new Date().toISOString().split("T")[0],
     });
     setIsModalOpen(true);
   };
-
-  const handleDelete = (taskId) => {
+  const handleDelete = async (taskId) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
-      const updated = deleteTask(taskId);
-      setTasks(updated);
+      try {
+        const response = await api.deleteTask(taskId);
+        if (response.success) {
+          // Remove task from local state
+          setTasks(tasks.filter((task) => task.id !== taskId));
+        }
+      } catch (error) {
+        console.error("Error deleting task:", error);
+      }
     }
   };
 

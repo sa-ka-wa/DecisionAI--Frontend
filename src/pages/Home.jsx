@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { format as dateFnsFormat } from "date-fns";
 import { getTasks } from "../services/api";
 import "../Pages.Styles/Home.css";
 
@@ -11,30 +12,38 @@ const Home = () => {
     avgImpact: 0,
     completionRate: 0,
   });
+  const [recentTasks, setRecentTasks] = useState([]);
 
   useEffect(() => {
-    const fetchStats = () => {
-      const tasks = getTasks();
-      const completed = tasks.filter((t) => t.status === "completed").length;
-      const criticalPriority = tasks.filter((t) => t.priority <= 2).length;
-      const avgImpact =
-        tasks.reduce((sum, t) => sum + t.impact, 0) / (tasks.length || 1);
-      const completionRate =
-        tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0;
+    const fetchTasks = async () => {
+      try {
+        const tasks = await getTasks(); // ✅ await here
 
-      setStats({
-        totalTasks: tasks.length,
-        completed,
-        criticalPriority,
-        avgImpact: avgImpact.toFixed(1),
-        completionRate,
-      });
+        // Compute stats
+        const completed = tasks.filter((t) => t.status === "completed").length;
+        const criticalPriority = tasks.filter((t) => t.priority <= 2).length;
+        const avgImpact =
+          tasks.reduce((sum, t) => sum + t.impact, 0) / (tasks.length || 1);
+        const completionRate =
+          tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0;
+
+        setStats({
+          totalTasks: tasks.length,
+          completed,
+          criticalPriority,
+          avgImpact: avgImpact.toFixed(1),
+          completionRate,
+        });
+
+        // Set recent tasks
+        setRecentTasks(tasks.slice(0, 3));
+      } catch (err) {
+        console.error("Failed to fetch tasks:", err);
+      }
     };
 
-    fetchStats();
+    fetchTasks();
   }, []);
-
-  const recentTasks = getTasks().slice(0, 3);
 
   return (
     <div className="fade-in">
@@ -165,7 +174,10 @@ const Home = () => {
                         Impact: {task.impact}/10
                       </span>
                       <span className="text-sm text-gray-500">
-                        {format(new Date(task.dueDate), "MMM dd")}
+                        {dateFnsFormat(
+                          new Date(task.due_date || task.dueDate),
+                          "MMM dd",
+                        )}
                       </span>
                     </div>
                   </div>
@@ -235,26 +247,26 @@ const Home = () => {
 };
 
 // Helper function for date formatting
-function format(date, formatString) {
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  const d = new Date(date);
-  if (formatString === "MMM dd") {
-    return `${months[d.getMonth()]} ${d.getDate()}`;
-  }
-  return date.toString();
-}
+// function format(date, formatString) {
+//   const months = [
+//     "Jan",
+//     "Feb",
+//     "Mar",
+//     "Apr",
+//     "May",
+//     "Jun",
+//     "Jul",
+//     "Aug",
+//     "Sep",
+//     "Oct",
+//     "Nov",
+//     "Dec",
+//   ];
+//   const d = new Date(date);
+//   if (formatString === "MMM dd") {
+//     return `${months[d.getMonth()]} ${d.getDate()}`;
+//   }
+//   return date.toString();
+// }
 
 export default Home;
