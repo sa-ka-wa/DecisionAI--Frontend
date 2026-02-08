@@ -63,6 +63,9 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     console.log(`API Request to: ${API_BASE_URL}${endpoint}`);
+    if (config.body) {
+      console.log("Request payload:", JSON.parse(config.body));
+    }
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
     // Handle 401 - Redirect to login
@@ -75,6 +78,7 @@ const apiRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error("API Error Response:", data);
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
 
@@ -164,7 +168,9 @@ export const tasksApi = {
       impact: taskData.impact || 5,
       status: taskData.status || "pending",
       progress: taskData.progress || 0,
-      due_date: taskData.dueDate, // Note: your backend expects 'due_date' not 'dueDate'
+      due_date: taskData.dueDate
+        ? new Date(taskData.dueDate).toISOString()
+        : new Date().toISOString(), // Convert to ISO 8601 format
       tags: taskData.tags || [],
       complexity: taskData.complexity || 3,
       estimated_hours: taskData.estimatedHours || 1.0,
@@ -180,7 +186,10 @@ export const tasksApi = {
     // Transform data if needed
     const backendTaskData = {
       ...taskData,
-      due_date: taskData.dueDate || taskData.due_date,
+      due_date: taskData.dueDate
+        ? new Date(taskData.dueDate).toISOString()
+        : taskData.due_date,
+      estimated_hours: taskData.estimatedHours || taskData.estimated_hours,
     };
 
     // Remove undefined values
@@ -242,7 +251,9 @@ export const tasksApi = {
       impact: task.impact || 5,
       status: task.status || "pending",
       progress: task.progress || 0,
-      due_date: task.dueDate,
+      due_date: task.dueDate
+        ? new Date(task.dueDate).toISOString()
+        : new Date().toISOString(),
       tags: task.tags || [],
       complexity: task.complexity || 3,
       estimated_hours: task.estimatedHours || 1.0,

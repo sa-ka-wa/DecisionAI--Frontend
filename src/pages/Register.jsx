@@ -6,7 +6,6 @@ import "../Pages.Styles/Login.css";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     name: "",
     password: "",

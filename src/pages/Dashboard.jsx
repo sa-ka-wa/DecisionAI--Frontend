@@ -10,7 +10,17 @@ const Dashboard = () => {
   const [sortBy, setSortBy] = useState("priority");
 
   useEffect(() => {
-    setTasks(getTasks());
+    const fetchTasks = async () => {
+      try {
+        const data = await getTasks();
+        setTasks(Array.isArray(data) ? data : data || []);
+      } catch (err) {
+        console.error("Error loading tasks for dashboard:", err);
+        setTasks([]);
+      }
+    };
+
+    fetchTasks();
   }, []);
 
   const filteredTasks = tasks.filter((task) => {
