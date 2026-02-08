@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { format as dateFnsFormat } from "date-fns";
-import { getTasks } from "../services/api";
+import { getTasks, api } from "../services/api";
 import "../Pages.Styles/Home.css";
 
 const Home = () => {
@@ -13,11 +13,30 @@ const Home = () => {
     completionRate: 0,
   });
   const [recentTasks, setRecentTasks] = useState([]);
+  const [aiRecommendations, setAiRecommendations] = useState(null);
+  const [aiLoading, setAiLoading] = useState(true);
+  const [aiError, setAiError] = useState(null);
+
+  // Default AI recommendations for fallback
+  const defaultRecommendations = {
+    focus_areas: [
+      "Complete high-priority tasks first",
+      "Focus on high-impact work",
+    ],
+    quick_wins: ["Review pending tasks", "Prioritize urgent items"],
+    risk_alerts: ["Check for dependencies", "Monitor deadlines"],
+    optimization_tips: [
+      "Schedule focused time blocks",
+      "Break large tasks into subtasks",
+    ],
+    efficiency_score: 65,
+  };
 
   useEffect(() => {
-    const fetchTasks = async () => {
+    const fetchData = async () => {
       try {
-        const tasks = await getTasks(); // ✅ await here
+        // Fetch tasks
+        const tasks = await getTasks();
 
         // Compute stats
         const completed = tasks.filter((t) => t.status === "completed").length;
@@ -42,8 +61,31 @@ const Home = () => {
       }
     };
 
-    fetchTasks();
+    const fetchAIRecommendations = async () => {
+      setAiLoading(true);
+      setAiError(null);
+      try {
+        const response = await api.getAIRecommendations();
+        if (response.success && response.data) {
+          setAiRecommendations(response.data);
+        } else {
+          console.warn("Failed to fetch AI recommendations:", response.message);
+          setAiRecommendations(defaultRecommendations);
+        }
+      } catch (err) {
+        console.error("Error fetching AI recommendations:", err);
+        setAiError(err.message);
+        setAiRecommendations(defaultRecommendations);
+      } finally {
+        setAiLoading(false);
+      }
+    };
+
+    fetchData();
+    fetchAIRecommendations();
   }, []);
+
+  const recommendations = aiRecommendations || defaultRecommendations;
 
   return (
     <div className="fade-in">
@@ -194,47 +236,104 @@ const Home = () => {
             <div>
               <h3 className="font-bold text-gray-800">AI Recommendations</h3>
               <p className="text-sm text-gray-600">
-                Based on your current workload
+                {aiLoading
+                  ? "Loading insights..."
+                  : "Based on your current workload"}
               </p>
             </div>
           </div>
 
+          {aiLoading ? (
+            <div
+              style={{ padding: "20px", textAlign: "center", color: "#6b7280" }}
+            >
+              ⏳ Analyzing your tasks...
+            </div>
+          ) : aiError ? (
+            <div
+              style={{
+                padding: "12px",
+                backgroundColor: "#fef3c7",
+                borderRadius: "6px",
+                color: "#78350f",
+                fontSize: "0.875rem",
+                marginTop: "8px",
+              }}
+            >
+              ⚠️ Using default recommendations (API unavailable)
+            </div>
+          ) : null}
+
           <div className="space-y-4">
-            <div className="ai-card blue">
-              <div className="flex items-center mb-1">
-                <span className="text-blue-500 mr-2">🎯</span>
-                <span className="font-medium text-sm text-gray-800">
-                  Focus Priority
-                </span>
-              </div>
-              <p className="text-sm text-gray-600">
-                Complete 2 high-impact tasks today to maximize ROI
-              </p>
-            </div>
+            {/* Focus Areas */}
+            {recommendations.focus_areas &&
+              recommendations.focus_areas.length > 0 && (
+                <div className="ai-card blue">
+                  <div className="flex items-center mb-1">
+                    <span className="text-blue-500 mr-2">🎯</span>
+                    <span className="font-medium text-sm text-gray-800">
+                      Focus Priority
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {recommendations.focus_areas[0]}
+                  </p>
+                </div>
+              )}
 
-            <div className="ai-card purple">
-              <div className="flex items-center mb-1">
-                <span className="text-purple-500 mr-2">🚀</span>
-                <span className="font-medium text-sm text-gray-800">
-                  Quick Win
-                </span>
-              </div>
-              <p className="text-sm text-gray-600">
-                "User research interviews" can be completed in 2 hours
-              </p>
-            </div>
+            {/* Quick Wins */}
+            {recommendations.quick_wins &&
+              recommendations.quick_wins.length > 0 && (
+                <div className="ai-card purple">
+                  <div className="flex items-center mb-1">
+                    <span className="text-purple-500 mr-2">🚀</span>
+                    <span className="font-medium text-sm text-gray-800">
+                      Quick Win
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {recommendations.quick_wins[0]}
+                  </p>
+                </div>
+              )}
 
-            <div className="ai-card green">
-              <div className="flex items-center mb-1">
-                <span className="text-green-500 mr-2">📈</span>
-                <span className="font-medium text-sm text-gray-800">
-                  Trend Alert
-                </span>
+            {/* Optimization Tips */}
+            {recommendations.optimization_tips &&
+              recommendations.optimization_tips.length > 0 && (
+                <div className="ai-card green">
+                  <div className="flex items-center mb-1">
+                    <span className="text-green-500 mr-2">📈</span>
+                    <span className="font-medium text-sm text-gray-800">
+                      Efficiency Tip
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {recommendations.optimization_tips[0]}
+                  </p>
+                </div>
+              )}
+
+            {/* Efficiency Score */}
+            {recommendations.efficiency_score !== undefined && (
+              <div
+                style={{
+                  padding: "12px",
+                  backgroundColor: "#f0f9ff",
+                  borderRadius: "6px",
+                  marginTop: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    color: "#0066cc",
+                    fontWeight: "600",
+                  }}
+                >
+                  📊 Efficiency Score: {recommendations.efficiency_score}/100
+                </div>
               </div>
-              <p className="text-sm text-gray-600">
-                Design tasks have 40% higher impact than average
-              </p>
-            </div>
+            )}
           </div>
 
           <button className="btn-primary mt-6 w-full">
@@ -245,28 +344,5 @@ const Home = () => {
     </div>
   );
 };
-
-// Helper function for date formatting
-// function format(date, formatString) {
-//   const months = [
-//     "Jan",
-//     "Feb",
-//     "Mar",
-//     "Apr",
-//     "May",
-//     "Jun",
-//     "Jul",
-//     "Aug",
-//     "Sep",
-//     "Oct",
-//     "Nov",
-//     "Dec",
-//   ];
-//   const d = new Date(date);
-//   if (formatString === "MMM dd") {
-//     return `${months[d.getMonth()]} ${d.getDate()}`;
-//   }
-//   return date.toString();
-// }
 
 export default Home;

@@ -276,51 +276,114 @@ export const tasksApi = {
 // Analytics API (matches your backend routes)
 export const analyticsApi = {
   getDashboardStats: async () => {
-    return apiRequest("/analytics/dashboard");
+    try {
+      return await apiRequest("/analytics/dashboard");
+    } catch (error) {
+      console.warn("Dashboard stats unavailable:", error);
+      return {
+        success: false,
+        message: "Dashboard stats temporarily unavailable",
+      };
+    }
   },
 
   getCompletionRate: async (period = "week") => {
-    return apiRequest(`/analytics/completion-rate?period=${period}`);
+    try {
+      return await apiRequest(`/analytics/completion-rate?period=${period}`);
+    } catch (error) {
+      console.warn("Completion rate unavailable:", error);
+      return { success: false, message: "Completion rate unavailable" };
+    }
   },
 
   getCategoryBreakdown: async () => {
-    return apiRequest("/analytics/category-breakdown");
+    try {
+      return await apiRequest("/analytics/category-breakdown");
+    } catch (error) {
+      console.warn("Category breakdown unavailable:", error);
+      return { success: false, message: "Category breakdown unavailable" };
+    }
   },
 
   getImpactAnalysis: async () => {
-    return apiRequest("/analytics/impact-analysis");
+    try {
+      return await apiRequest("/analytics/impact-analysis");
+    } catch (error) {
+      console.warn("Impact analysis unavailable:", error);
+      return { success: false, message: "Impact analysis unavailable" };
+    }
   },
 
   getPriorityDistribution: async () => {
-    return apiRequest("/analytics/priority-distribution");
+    try {
+      return await apiRequest("/analytics/priority-distribution");
+    } catch (error) {
+      console.warn("Priority distribution unavailable:", error);
+      return { success: false, message: "Priority distribution unavailable" };
+    }
   },
 
   getTimelineData: async () => {
-    return apiRequest("/analytics/timeline");
+    try {
+      return await apiRequest("/analytics/timeline");
+    } catch (error) {
+      console.warn("Timeline data unavailable:", error);
+      return { success: false, message: "Timeline data unavailable" };
+    }
   },
 
   getPerformanceMetrics: async () => {
-    return apiRequest("/analytics/performance");
+    try {
+      return await apiRequest("/analytics/performance");
+    } catch (error) {
+      console.warn("Performance metrics unavailable:", error);
+      return { success: false, message: "Performance metrics unavailable" };
+    }
   },
 
   getProductivityScore: async () => {
-    return apiRequest("/analytics/productivity");
+    try {
+      return await apiRequest("/analytics/productivity");
+    } catch (error) {
+      console.warn("Productivity score unavailable:", error);
+      return { success: false, message: "Productivity score unavailable" };
+    }
   },
 
   getAIRecommendations: async () => {
-    return apiRequest("/analytics/ai/recommendations");
+    try {
+      return await apiRequest("/analytics/ai/recommendations");
+    } catch (error) {
+      console.warn("AI recommendations unavailable:", error);
+      return { success: false, message: "AI recommendations unavailable" };
+    }
   },
 
   getOptimizationTips: async () => {
-    return apiRequest("/analytics/ai/optimization");
+    try {
+      return await apiRequest("/analytics/ai/optimization");
+    } catch (error) {
+      console.warn("Optimization tips unavailable:", error);
+      return { success: false, message: "Optimization tips unavailable" };
+    }
   },
 
   getRiskAnalysis: async () => {
-    return apiRequest("/analytics/ai/risk-analysis");
+    try {
+      return await apiRequest("/analytics/ai/risk-analysis");
+    } catch (error) {
+      console.warn("Risk analysis unavailable:", error);
+      return { success: false, message: "Risk analysis unavailable" };
+    }
   },
 
   exportData: async (format = "json") => {
-    return apiRequest(`/analytics/export?format=${format}`);
+    try {
+      return await apiRequest(`/analytics/export?format=${format}`);
+    } catch (error) {
+      console.warn("Export unavailable:", error);
+      return { success: false, message: "Export temporarily unavailable" };
+    }
   },
 };
 

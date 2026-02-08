@@ -85,7 +85,7 @@ const Navbar = () => {
                   fontWeight: 500,
                 }}
               >
-                💡 3 new insights available
+                ✨ Fetching recommendations
               </div>
             </div>
           </div>
